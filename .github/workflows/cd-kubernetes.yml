@@ -59,7 +59,7 @@ env:
 jobs:
   deploy:
     name: Deploy to Kubernetes
-    runs-on: [self-hosted, linux, x64, k8s-deployer]
+    runs-on: [self-hosted, linux, ARM64]
 
     environment:
       name: production

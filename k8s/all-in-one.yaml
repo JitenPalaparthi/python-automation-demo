@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: playwright-demo
+  labels:
+    name: playwright-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: playwright-python-demo
+  namespace: playwright-demo
+  labels:
+    app: playwright-python-demo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: playwright-python-demo
+  template:
+    metadata:
+      labels:
+        app: playwright-python-demo
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/jitenpalaparthi/python-automation-demo:v1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: ENV
+              value: "production"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+      imagePullSecrets:
+        - name: ghcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: playwright-python-service
+  namespace: playwright-demo
+  labels:
+    app: playwright-python-demo
+spec:
+  selector:
+    app: playwright-python-demo
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: NodePort

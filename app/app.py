@@ -10,6 +10,7 @@ PRODUCTS = [
     {"id": 1, "name": "Laptop Bag", "price": 2499},
     {"id": 2, "name": "Wireless Mouse", "price": 1299},
     {"id": 3, "name": "Mechanical Keyboard", "price": 4999},
+     {"id": 5, "name": "hdd", "price": 1255},
 ]
 
 HTML = """

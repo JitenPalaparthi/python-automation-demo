@@ -1,0 +1,29 @@
+name: Appian CI
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  appian-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout pipeline repo
+        uses: actions/checkout@v4
+
+      - name: Export package from Appian
+        run: |
+          curl -sS -X POST \
+            "https://<your-appian-domain>/suite/deployment-management/v2/deployments" \
+            -H "appian-api-key: ${{ secrets.APPIAN_API_KEY }}" \
+            -H "Action-Type: export" \
+            -o export-response.json
+
+      - name: Inspect package
+        run: |
+          curl -sS -X POST \
+            "https://<your-appian-domain>/suite/deployment-management/v2/inspections" \
+            -H "appian-api-key: ${{ secrets.APPIAN_API_KEY }}" \
+            -F "packageFile=@appian-package.zip"

@@ -1,0 +1,55 @@
+name: Appian CD
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  deploy-to-appian:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout pipeline repo
+        uses: actions/checkout@v4
+
+      - name: Inspect package
+        run: |
+          curl -sS -X POST \
+            "${{ secrets.APPIAN_BASE_URL }}/suite/deployment-management/v2/inspections" \
+            -H "appian-api-key: ${{ secrets.APPIAN_API_KEY }}" \
+            -F "packageFile=@artifacts/appian-package.zip" \
+            -F "ICF=@artifacts/import-customization.properties" \
+            -o inspection-response.json
+
+          cat inspection-response.json
+
+      - name: Deploy package to Appian
+        run: |
+          curl -sS -X POST \
+            "${{ secrets.APPIAN_BASE_URL }}/suite/deployment-management/v2/deployments" \
+            -H "appian-api-key: ${{ secrets.APPIAN_API_KEY }}" \
+            -H "Action-Type: import" \
+            -F "packageFile=@artifacts/appian-package.zip" \
+            -F "ICF=@artifacts/import-customization.properties" \
+            -o deployment-response.json
+
+          cat deployment-response.json
+
+      - name: Get deployment log
+        run: |
+          DEPLOYMENT_UUID=$(python - <<'PY'
+          import json
+          with open("deployment-response.json") as f:
+              data = json.load(f)
+          print(data.get("uuid", ""))
+          PY
+          )
+
+          curl -sS \
+            "${{ secrets.APPIAN_BASE_URL }}/suite/deployment-management/v2/deployments/${DEPLOYMENT_UUID}/log" \
+            -H "appian-api-key: ${{ secrets.APPIAN_API_KEY }}" \
+            -o deployment-log.txt
+
+          cat deployment-log.txt
